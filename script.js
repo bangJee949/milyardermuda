@@ -31,7 +31,12 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    uploadArea.addEventListener("click", () => fileInput.click());
+    uploadArea.addEventListener("click", (e) => {
+    // Hanya buka file dialog jika yang diklik bukan file input itu sendiri
+    if (e.target === uploadArea) {
+        fileInput.click();
+    }
+});
 
     fileInput.addEventListener("change", e => {
         const files = Array.from(e.target.files).slice(0, 100);

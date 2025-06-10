@@ -1,4 +1,3 @@
-
 let uploadedFiles = [];
 let userApiKey = localStorage.getItem("geminiApiKey") || "";
 
@@ -32,11 +31,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     uploadArea.addEventListener("click", (e) => {
-    // Hanya buka file dialog jika yang diklik bukan file input itu sendiri
-    if (e.target === uploadArea) {
-        fileInput.click();
-    }
-});
+        if (e.target === uploadArea) {
+            fileInput.click();
+        }
+    });
 
     fileInput.addEventListener("change", e => {
         const files = Array.from(e.target.files).slice(0, 100);
@@ -55,10 +53,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     generateButton.addEventListener("click", async () => {
         if (!userApiKey) return alert("API Key not set.");
+
         results.innerHTML = "Generating metadata...";
         const output = [];
 
         for (const file of uploadedFiles) {
+            // Skip file > 5MB
+            if (file.size > 5 * 1024 * 1024) {
+                console.warn(`${file.name} skipped (too large >5MB)`);
+                output.push({ filename: file.name, previewUrl: "", type: file.type, text: "Skipped: file too large." });
+                continue;
+            }
+
             const base64 = await fileToBase64(file);
             const type = file.type.startsWith("video/") ? "video" : "image";
 
@@ -84,10 +90,15 @@ document.addEventListener("DOMContentLoaded", () => {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(body)
                 });
+
                 const data = await res.json();
-                const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "No result";
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "No result";
                 output.push({ filename: file.name, previewUrl: URL.createObjectURL(file), type: file.type, text });
+
+                // Delay untuk menghindari rate limit
+                await new Promise(resolve => setTimeout(resolve, 1000));
             } catch (err) {
+                console.error("Fetch error:", err);
                 output.push({ filename: file.name, previewUrl: "", type: file.type, text: "Error fetching metadata." });
             }
         }
@@ -105,7 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function extract(field, text) {
-        const match = text.match(new RegExp(`${field}\s*[:：]\s*(.*?)\n`, "i"));
+        const match = text.match(new RegExp(`${field}\\s*[:：]\\s*(.*?)\\n`, "i"));
         return match ? match[1].replace(/^\*+|\*+$/g, "").trim() : "N/A";
     }
 

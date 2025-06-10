@@ -4,6 +4,26 @@
     <meta charset="UTF-8">
     <title>AI Metadata Generator (EN)</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .info-tab {
+            background-color: #f1f1f1;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 15px;
+        }
+
+        .info-tab a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .info-tab a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
 <main class="container">
@@ -13,13 +33,15 @@
         <input type="text" id="apiKeyInput" placeholder="Enter your Gemini API Key">
         <button id="saveApiKey">Save API Key</button>
         <div id="apiKeyStatus"></div>
-        <!-- LINK DITARUH DI SINI SESUAI PERMINTAAN -->
-        <p style="margin-top: 10px;">
-            Belum punya API Key? 👉 
+
+        <!-- TAB INFORMASI DI BAWAH INPUT API KEY -->
+        <div class="info-tab">
+            <strong>Belum punya API Key?</strong><br>
+            Dapatkan gratis di sini 👉 
             <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer">
-                Dapatkan API Key Gemini di sini
+                https://makersuite.google.com/app/apikey
             </a>
-        </p>
+        </div>
     </div>
 
     <div class="upload-area" id="uploadArea">

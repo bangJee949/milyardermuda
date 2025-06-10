@@ -1,0 +1,45 @@
+body {
+    font-family: sans-serif;
+    background: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+.container {
+    max-width: 800px;
+    margin: 2rem auto;
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+.upload-area {
+    border: 2px dashed #aaa;
+    padding: 2rem;
+    text-align: center;
+    background: #fafafa;
+    cursor: pointer;
+}
+#previewArea img, #previewArea video {
+    width: 100px;
+    margin: 0.5rem;
+    border-radius: 8px;
+}
+button {
+    margin-top: 1rem;
+    padding: 10px 20px;
+    font-weight: bold;
+}
+.toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: green;
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    display: none;
+}
+.toast.show {
+    display: block;
+}

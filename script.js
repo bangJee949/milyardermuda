@@ -1,13 +1,10 @@
 function generateMetadata(fileName, tags = []) {
     const baseName = fileName.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ");
-    const title = baseName.slice(0, 70);  // Max 70 chars
-
+    const title = baseName.slice(0, 70);
     const description = `Foto atau video dengan judul "${baseName}" yang menggambarkan konten visual dengan jelas. Cocok untuk digunakan dalam berbagai proyek kreatif yang memerlukan aset visual berkualitas.`;
-
     const keywords = [...new Set(tags.concat(baseName.toLowerCase().split(" ")))]
         .filter(k => k.length > 2)
         .slice(0, 50);
-
     return { title, description, keywords };
 }
 
@@ -86,20 +83,35 @@ document.addEventListener("DOMContentLoaded", () => {
                 }]
             };
 
-            try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${userApiKey}`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(body)
-                });
-                const data = await res.json();
-                const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "No result";
-                output.push({ filename: file.name, previewUrl: URL.createObjectURL(file), type: file.type, text });
-            } catch (err) {
-                output.push({ filename: file.name, previewUrl: "", type: file.type, text: "Error fetching metadata." });
+            let retries = 3;
+            let delay = 7000;
+
+            while (retries > 0) {
+                try {
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${userApiKey}`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(body)
+                    });
+
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                    const data = await res.json();
+                    const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "No result";
+                    output.push({ filename: file.name, previewUrl: URL.createObjectURL(file), type: file.type, text });
+                    break;
+                } catch (err) {
+                    console.warn(`Retrying ${file.name} (${3 - retries + 1}/3) - ${err.message}`);
+                    retries--;
+                    if (retries === 0) {
+                        output.push({ filename: file.name, previewUrl: "", type: file.type, text: "Error fetching metadata after retries." });
+                    } else {
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay += 3000;
+                    }
+                }
             }
 
-            // ✅ Tambahkan delay 5 detik antar file
             await new Promise(resolve => setTimeout(resolve, 5000));
         }
 
@@ -166,7 +178,6 @@ document.getElementById("fetchTrendsButton").addEventListener("click", () => {
 
     trendResults.innerHTML = `
       <strong>Prediksi Tren Bulan ${nextMonth}</strong><br><br>
-
       <div style="margin-bottom: 20px;">
         <h4>📷 Adobe Stock</h4>
         <ul>
@@ -175,7 +186,6 @@ document.getElementById("fetchTrendsButton").addEventListener("click", () => {
           <li>Tema Populer: Inklusivitas, AI, keberlanjutan, remote working</li>
         </ul>
       </div>
-
       <div style="margin-bottom: 20px;">
         <h4>📸 Shutterstock</h4>
         <ul>
@@ -184,7 +194,6 @@ document.getElementById("fetchTrendsButton").addEventListener("click", () => {
           <li>Tema Populer: UI/UX digital, ekspresi emosi, AI tools</li>
         </ul>
       </div>
-
       <div style="margin-bottom: 20px;">
         <h4>🎨 Envato Elements</h4>
         <ul>
@@ -193,7 +202,6 @@ document.getElementById("fetchTrendsButton").addEventListener("click", () => {
           <li>Tema Populer: Retro futurism, neon glitch, desain UI minimalis</li>
         </ul>
       </div>
-
       <p><em>Data diprediksi dari pola musiman dan update tren visual pada platform masing-masing.</em></p>
     `;
 });

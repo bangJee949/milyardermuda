@@ -85,6 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             let retries = 3;
             let delay = 7000;
+            let responseText = "";
 
             while (retries > 0) {
                 try {
@@ -95,16 +96,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     });
 
                     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
                     const data = await res.json();
-                    const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "No result";
-                    output.push({ filename: file.name, previewUrl: URL.createObjectURL(file), type: file.type, text });
+                    responseText = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "No result";
                     break;
                 } catch (err) {
-                    console.warn(`Retrying ${file.name} (${3 - retries + 1}/3) - ${err.message}`);
                     retries--;
                     if (retries === 0) {
-                        output.push({ filename: file.name, previewUrl: "", type: file.type, text: "Error fetching metadata after retries." });
+                        responseText = "Error fetching metadata after retries.";
                     } else {
                         await new Promise(resolve => setTimeout(resolve, delay));
                         delay += 3000;
@@ -112,6 +110,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
 
+            output.push({ filename: file.name, previewUrl: URL.createObjectURL(file), type: file.type, text: responseText });
+
+            // Tambahkan jeda antar file
             await new Promise(resolve => setTimeout(resolve, 5000));
         }
 
@@ -128,8 +129,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function extract(field, text) {
-        const match = text.match(new RegExp(`${field}\s*[:：]\s*(.*?)\n`, "i"));
-        return match ? match[1].replace(/^\*+|\*+$/g, "").trim() : "N/A";
+        const regex = new RegExp(`${field}\\s*[:：]\\s*(.+?)(\\n|$)`, "i");
+        const match = text.match(regex);
+        if (match) {
+            return match[1].replace(/^[*\-–\s]+|[*\s]+$/g, "").trim();
+        }
+
+        // fallback jika format berbeda
+        const bulletRegex = new RegExp(`\\*?\\s*${field}\\s*[:：]?\\s*\\n?[-*]?(.*?)\\n`, "i");
+        const fallback = text.match(bulletRegex);
+        return fallback ? fallback[1].trim() : "N/A";
     }
 
     function clean(text) {

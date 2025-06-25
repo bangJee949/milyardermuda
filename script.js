@@ -112,7 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             output.push({ filename: file.name, previewUrl: URL.createObjectURL(file), type: file.type, text: responseText });
 
-            // Tambahkan jeda antar file
+            // Delay antar file
             await new Promise(resolve => setTimeout(resolve, 5000));
         }
 
@@ -128,21 +128,33 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    function extract(field, text) {
-        const regex = new RegExp(`${field}\\s*[:：]\\s*(.+?)(\\n|$)`, "i");
-        const match = text.match(regex);
-        if (match) {
-            return match[1].replace(/^[*\-–\s]+|[*\s]+$/g, "").trim();
+    function extractSmart(text) {
+        let lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+        let result = { title: "N/A", description: "N/A", keywords: "N/A" };
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].toLowerCase();
+
+            if (line.startsWith("title") || line.includes("title:")) {
+                result.title = lines[i].split(/[:：]/)[1]?.trim() ?? "N/A";
+            } else if (line.startsWith("description") || line.includes("description:")) {
+                result.description = lines[i].split(/[:：]/)[1]?.trim() ?? "N/A";
+            } else if (line.startsWith("keywords") || line.includes("keywords:")) {
+                result.keywords = lines[i].split(/[:：]/)[1]?.trim() ?? "N/A";
+            }
+
+            if (line.startsWith("title") && lines[i + 1]) {
+                result.title = result.title === "N/A" ? lines[i + 1].trim() : result.title;
+            }
+            if (line.startsWith("description") && lines[i + 1]) {
+                result.description = result.description === "N/A" ? lines[i + 1].trim() : result.description;
+            }
+            if (line.startsWith("keywords") && lines[i + 1]) {
+                result.keywords = result.keywords === "N/A" ? lines[i + 1].trim() : result.keywords;
+            }
         }
 
-        // fallback jika format berbeda
-        const bulletRegex = new RegExp(`\\*?\\s*${field}\\s*[:：]?\\s*\\n?[-*]?(.*?)\\n`, "i");
-        const fallback = text.match(bulletRegex);
-        return fallback ? fallback[1].trim() : "N/A";
-    }
-
-    function clean(text) {
-        return text.replace(/^\*+|\*+$/g, "").trim();
+        return result;
     }
 
     function displayResults(dataArray) {
@@ -157,9 +169,10 @@ document.addEventListener("DOMContentLoaded", () => {
             media.className = "preview-media";
             block.appendChild(media);
 
-            const title = clean(extract("title", item.text));
-            const desc = clean(extract("description", item.text));
-            const keywords = clean(extract("keywords", item.text));
+            const extracted = extractSmart(item.text);
+            const title = extracted.title;
+            const desc = extracted.description;
+            const keywords = extracted.keywords;
 
             block.innerHTML += `
                 <div class="tab-header"><h3>${item.filename}</h3></div>

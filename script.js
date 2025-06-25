@@ -1,19 +1,15 @@
-
 function generateMetadata(fileName, tags = []) {
     const baseName = fileName.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ");
     const title = baseName.slice(0, 70);  // Max 70 chars
 
-    // Buat deskripsi berdasarkan nama file dan tag yang relevan
     const description = `Foto atau video dengan judul "${baseName}" yang menggambarkan konten visual dengan jelas. Cocok untuk digunakan dalam berbagai proyek kreatif yang memerlukan aset visual berkualitas.`;
 
-    // Pilih maksimal 50 keyword unik, terurut
     const keywords = [...new Set(tags.concat(baseName.toLowerCase().split(" ")))]
         .filter(k => k.length > 2)
         .slice(0, 50);
 
     return { title, description, keywords };
 }
-
 
 let uploadedFiles = [];
 let userApiKey = localStorage.getItem("geminiApiKey") || "";
@@ -29,7 +25,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const results = document.getElementById("results");
     const toast = document.getElementById("toast");
 
-    // Load API key if available
     if (userApiKey) {
         apiKeyInput.value = userApiKey;
         apiKeyStatus.textContent = "API Key loaded.";
@@ -103,6 +98,9 @@ document.addEventListener("DOMContentLoaded", () => {
             } catch (err) {
                 output.push({ filename: file.name, previewUrl: "", type: file.type, text: "Error fetching metadata." });
             }
+
+            // ✅ Tambahkan delay 5 detik antar file
+            await new Promise(resolve => setTimeout(resolve, 5000));
         }
 
         displayResults(output);
@@ -160,7 +158,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 });
-
 
 document.getElementById("fetchTrendsButton").addEventListener("click", () => {
     const trendResults = document.getElementById("trendResults");

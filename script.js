@@ -1,4 +1,3 @@
-
 function generateMetadata(fileName, tags = []) {
     const baseName = fileName.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ");
     const title = baseName.slice(0, 70);  // Max 70 chars
